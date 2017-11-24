@@ -19,15 +19,62 @@ def Classification():
     data_set_attributes = [[140, 'Smooth'], [130, 'Smooth'], [150, 'Bumpy'], [170, 'Bumpy'], [177, 'Bumpy'], [135, 'Smooth'], [140, 'Smooth']]
     data_set_labels = ['Apple', 'Apple', 'Orange', 'Orange', 'Orange', 'Apple']
 
-    tree = Node()
-    tree.value = data_set_attributes
+    #We have to discretize the values that are continous
+    print(data_set_attributes)
+    cleaned_data = Discretizer(data_set_attributes)
 
-    Preprocessing(tree)
+    tree = Node()
+    tree.value = cleaned_data
+
+    label_groups, labels_list = Preprocessing(tree)
+
+    Frecuency(tree, labels_list)
+
+    #info_gainance_of_system = 
+
+def Discretizer(data):
+    type_names = []
+    
+    first_row = data[0]
+    i = 0
+    for element in first_row:
+        if(isinstance(element, int)):
+            if('Integer' not in type_names):
+                type_names.append(['Integer', i])
+        elif(isinstance(element, str)):
+            if('String' not in type_names):
+                type_names.append(['String', i])
+        elif(isinstance(element, float)):
+            if('Float' not in type_names):
+                type_names.append(['Float', i])
+        else:
+            if('No type' not in type_names):
+                type_names.append(['No type', i])
+        i += 1
+
+    #Basic discretization (lol) of integers and floats. We are going to discretize in only 2 sets, based on the median value
+    for attr_type in type_names:
+        if attr_type[0] == 'Integer' or attr_type[0] == 'Float':
+            acum = 0.0
+            for row in data:
+                try:
+                    acum += row[attr_type[1]]
+                except TypeError as e:
+                    raise(e)
+            median = np.floor(acum / len(data))
+            #Now we set the new values to the data
+            for row in data:
+                if(row[attr_type[1]] <= median):
+                    row[attr_type[1]] = 'less than ' + str(median)
+                else:
+                    row[attr_type[1]] = 'greater than ' + str(median)
+        
+    return data
 
 
 def Preprocessing(tree):
     #This part tries to define the set of labels that are going to be evaluated 
-    #Only for this case, where we are evaluating only the second column
+    #Only for this case, where we are evaluating only the second column <- don't pay attention
 
     #TODO: Scale this code to be used in N columns. DONE!!!
     #What it finally does is agrouping tha characteristics in lists
@@ -36,7 +83,7 @@ def Preprocessing(tree):
         for i in tree.value:
             if(i[column] not in labels_list):
                 labels_list.append(i[column])
-    print(labels_list)
+    #print(labels_list)
     
     label_groups = [[]] * len(tree.value[0])
     for column in range(0, len(tree.value[0])):
@@ -48,8 +95,11 @@ def Preprocessing(tree):
                     break
         label_groups[column] = aux_list           
 
-    print(label_groups)
+    #print(label_groups)
 
+    return label_groups, labels_list
+
+def Frecuency(tree, labels_list):
     #This section is used to count how many characteristics are in the list
     #To proceed to calculate Entropy values for each characteristic
     label_frequency_list = [0]*len(labels_list)
@@ -61,9 +111,6 @@ def Preprocessing(tree):
                     label_frequency_list[i] += 1
     print(label_frequency_list)
     
-    #Now that we have the frequencies, can apply the formula to calculate entropy
-    #entropy_value = Entropy(label_frequency_list)
-    #print(entropy_value)
         
 def Entropy(list):
     #This function calculates the entropy value using:
